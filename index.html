@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>nulls Hub — press start to remember</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&family=Caveat:wght@500&display=swap"
+    />
+    <style>
+      :root {
+        --bg: #0a0b0f;
+        --panel: #12141b;
+        --panel-2: #181b24;
+        --line: #2a2f3d;
+        --text: #e6e8ee;
+        --dim: #9aa1b2;
+        --neon: #5cf07a;
+        --neon-dim: rgba(92, 240, 122, 0.18);
+        --pixel: "Press Start 2P", ui-monospace, "Courier New", monospace;
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --hand: "Caveat", "Comic Sans MS", cursive;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.65 var(--mono);
+        -webkit-font-smoothing: antialiased;
+      }
+      /* CRT scanlines + vignette */
+      body::before {
+        content: "";
+        position: fixed; inset: 0;
+        pointer-events: none; z-index: 50;
+        background:
+          repeating-linear-gradient(to bottom, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px),
+          radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+      }
+      a { color: var(--neon); }
+      a:focus-visible, button:focus-visible, li:focus-visible { outline: 3px dashed var(--neon); outline-offset: 3px; }
+      img { display: block; max-width: 100%; height: auto; }
+
+      .x-wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+
+      /* top bar */
+      .x-bar {
+        position: sticky; top: 0; z-index: 40;
+        background: rgba(10, 11, 15, 0.92);
+        border-bottom: 2px solid var(--line);
+      }
+      .x-bar .x-wrap { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+      .x-logo { font: 12px/1 var(--pixel); color: var(--text); text-decoration: none; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+      .x-logo span { color: var(--neon); }
+      .x-menu { display: flex; gap: 4px; overflow-x: auto; margin-left: auto; scrollbar-width: none; }
+      .x-menu::-webkit-scrollbar { display: none; }
+      .x-menu a {
+        font: 12px/1 var(--pixel); color: var(--dim); text-decoration: none;
+        padding: 0 10px; min-height: 44px; display: inline-flex; align-items: center; white-space: nowrap;
+      }
+      .x-menu a:hover { color: var(--neon); }
+      .x-menu a:hover::before { content: "▸ "; }
+
+      /* hero */
+      .x-hero { padding: 28px 0 8px; text-align: center; }
+      .x-screen {
+        position: relative;
+        border: 4px solid var(--text);
+        box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--line), 8px 8px 0 8px #000;
+        background: #000;
+        margin: 8px 6px 0;
+      }
+      .x-screen img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; }
+      .x-tag {
+        position: absolute; top: -14px; right: 10px; transform: rotate(3deg);
+        font: 12px/1.2 var(--pixel); background: var(--neon); color: #05140a;
+        padding: 6px 8px; border: 2px solid #000;
+      }
+      .x-eyebrow { font: 12px/1.5 var(--mono); color: var(--dim); margin: 28px 0 10px; letter-spacing: 0.04em; }
+      h1 {
+        font: 18px/1.6 var(--pixel); margin: 0 0 14px;
+        text-shadow: 3px 3px 0 #000, 0 0 18px var(--neon-dim);
+      }
+      h1 em { font-style: normal; color: var(--neon); display: block; font-size: 0.7em; margin-top: 6px; }
+      .x-sub { max-width: 560px; margin: 0 auto 6px; color: var(--text); }
+      .x-meta { font-size: 13px; color: var(--dim); margin: 0 0 18px; }
+      .x-start {
+        font: 12px/1 var(--pixel); color: var(--neon); margin: 22px 0;
+        animation: x-blink 1.1s steps(1) infinite;
+      }
+      @keyframes x-blink { 50% { opacity: 0; } }
+
+      /* buttons */
+      .x-btns { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin: 16px 0; }
+      .x-btns--left { justify-content: flex-start; }
+      .x-btn {
+        display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
+        font: 12px/1.5 var(--pixel); text-decoration: none; text-align: center;
+        color: #05140a; background: var(--neon);
+        padding: 12px 16px; border: 3px solid #000;
+        box-shadow: inset -3px -3px 0 rgba(0,0,0,0.3), 4px 4px 0 #000;
+        transition: transform 60ms, box-shadow 60ms;
+      }
+      .x-btn--ghost { background: var(--panel-2); color: var(--text); box-shadow: inset -3px -3px 0 rgba(0,0,0,0.4), 4px 4px 0 #000, 0 0 0 2px var(--line); }
+      .x-btn:hover { transform: translate(1px, 1px); box-shadow: inset -3px -3px 0 rgba(0,0,0,0.3), 3px 3px 0 #000; }
+      .x-btn--ghost:hover { box-shadow: inset -3px -3px 0 rgba(0,0,0,0.4), 3px 3px 0 #000, 0 0 0 2px var(--neon); }
+      .x-btn:active { transform: translate(4px, 4px); box-shadow: inset 3px 3px 0 rgba(0,0,0,0.3), 0 0 0 #000; }
+
+      /* timer box */
+      .x-timer {
+        border: 3px solid var(--line); background: #000; padding: 16px 12px 14px; margin: 18px 0;
+        text-align: center;
+      }
+      .x-timer__label { font: 12px/1.6 var(--pixel); color: var(--dim); margin: 0 0 12px; }
+      .x-timer__label b { color: #ff5a5a; font-weight: 400; }
+      .x-digits { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-width: 520px; margin: 0 auto; }
+      .x-digit { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .x-digit span:first-child {
+        font: 22px/1 var(--pixel); color: var(--neon);
+        text-shadow: 0 0 10px var(--neon-dim), 0 0 2px var(--neon);
+        font-variant-numeric: tabular-nums;
+      }
+      .x-digit span:last-child { font: 12px/1 var(--pixel); color: var(--dim); }
+      .x-timer__line { font: 13px/1.5 var(--mono); color: var(--dim); margin: 12px 0 0; }
+      .x-timer__line strong { color: var(--text); }
+      .x-over { font: 14px/1.4 var(--pixel); color: #ff5a5a; margin: 0; }
+
+      /* levels */
+      .x-level {
+        margin: 44px 0; background: var(--panel);
+        border: 3px solid var(--line);
+        box-shadow: 6px 6px 0 #000;
+        scroll-margin-top: 64px;
+      }
+      .x-level__bar {
+        display: flex; justify-content: space-between; align-items: center; gap: 8px;
+        background: var(--panel-2); border-bottom: 3px solid var(--line);
+        padding: 10px 14px; font: 12px/1.6 var(--pixel); color: var(--dim); flex-wrap: wrap;
+      }
+      .x-level__bar b { color: var(--neon); font-weight: 400; }
+      .x-level__body { padding: 18px 16px 20px; }
+      h2 { font: 14px/1.7 var(--pixel); margin: 0 0 12px; color: var(--text); }
+      h3 { font: 12px/1.6 var(--pixel); margin: 0 0 8px; color: var(--neon); }
+      p { margin: 0 0 12px; }
+      .x-lead { color: var(--dim); }
+      .x-live { font: 12px/1 var(--pixel); color: #05140a; background: var(--neon); padding: 5px 7px; }
+      .x-live::before { content: "● "; animation: x-blink 1.1s steps(1) infinite; }
+
+      .x-pic { margin: 16px 0; border: 3px solid #000; outline: 2px solid var(--line); background: #000; }
+      .x-pic img { width: 100%; }
+      .x-pic figcaption { font: 12px/1.4 var(--pixel); color: var(--dim); padding: 10px; background: var(--panel-2); }
+
+      /* prize table */
+      .x-prizes { list-style: none; padding: 0; margin: 16px 0 8px; border: 2px solid var(--line); }
+      .x-prizes li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px; border-bottom: 2px dashed var(--line); }
+      .x-prizes li:last-child { border-bottom: 0; }
+      .x-prizes li:first-child { background: #0d2414; box-shadow: inset 4px 0 0 var(--neon); }
+      .x-rank { font: 12px/1.6 var(--pixel); }
+      .x-rank small { display: block; font: 12px/1.4 var(--mono); color: var(--dim); }
+      .x-prize { text-align: right; font-weight: 700; }
+      .x-fine { font-size: 13px; color: var(--dim); }
+      .x-fine::before { content: "⚠ "; color: #ff5a5a; }
+
+      /* card grid */
+      .x-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0 0; }
+      .x-grid > div { background: var(--panel-2); border: 2px solid var(--line); padding: 14px; }
+      .x-grid > div p { margin: 0; color: var(--dim); font-size: 14px; }
+      .x-grid > div:nth-child(odd) { transform: rotate(-0.4deg); }
+      .x-grid > div:nth-child(even) { transform: rotate(0.3deg); }
+
+      .x-tip { border: 3px dashed var(--neon); padding: 14px; margin: 16px 0 0; }
+      .x-tip h3 { margin-bottom: 6px; }
+
+      /* timeline */
+      .x-log { list-style: none; padding: 0; margin: 0; border-left: 3px dotted var(--line); }
+      .x-log li { position: relative; padding: 0 0 18px 20px; }
+      .x-log li::before {
+        content: ""; position: absolute; left: -8px; top: 4px; width: 12px; height: 12px;
+        background: var(--line); border: 2px solid #000;
+      }
+      .x-log li.is-current::before { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+      .x-log .x-when { font: 12px/1.6 var(--pixel); color: var(--neon); margin: 0 0 4px; }
+      .x-log .x-what { margin: 0; }
+      .x-log .x-chip { display: inline-block; margin-top: 6px; font: 12px/1 var(--pixel); padding: 5px 7px; border: 2px solid var(--line); color: var(--dim); }
+      .x-log .x-chip--on { border-color: var(--neon); color: var(--neon); }
+
+      /* checklist */
+      .x-checks { list-style: none; padding: 0; margin: 0; }
+      .x-checks li {
+        display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px;
+        min-height: 52px; padding: 10px 6px; border-bottom: 2px dashed var(--line);
+        cursor: pointer; user-select: none;
+      }
+      .x-checks li:hover { background: var(--panel-2); }
+      .x-box {
+        flex: none; width: 22px; height: 22px; border: 3px solid var(--text); background: #000;
+        box-shadow: 2px 2px 0 #000; position: relative;
+      }
+      .x-checks li.is-done .x-box { border-color: var(--neon); }
+      .x-checks li.is-done .x-box::after {
+        content: ""; position: absolute; inset: 3px; background: var(--neon);
+      }
+      .x-checks li.is-done .x-item { text-decoration: line-through; color: var(--dim); }
+      .x-item { flex: 1 1 200px; }
+      .x-due { font: 12px/1 var(--pixel); color: #05140a; background: var(--neon); padding: 5px 7px; }
+      .x-score { font: 12px/1.6 var(--pixel); color: var(--dim); margin: 14px 0 0; }
+      .x-score b { color: var(--neon); font-weight: 400; }
+
+      /* links */
+      .x-links { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      .x-links a {
+        display: block; text-decoration: none; color: var(--text);
+        background: var(--panel-2); border: 2px solid var(--line); padding: 14px; min-height: 44px;
+        box-shadow: 4px 4px 0 #000; transition: transform 60ms, box-shadow 60ms;
+      }
+      .x-links a:hover { border-color: var(--neon); transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+      .x-links a:active { transform: translate(4px, 4px); box-shadow: none; }
+      .x-links a span { display: block; color: var(--neon); }
+
+      /* note + footer */
+      .x-note {
+        font: 26px/1.2 var(--hand); color: #f3e7b3; transform: rotate(-2deg);
+        margin: 36px 8px 10px; text-align: center;
+      }
+      .x-foot { border-top: 3px solid var(--line); margin-top: 32px; padding: 26px 0 60px; font-size: 13px; color: var(--dim); }
+      .x-foot p { max-width: 640px; }
+      .x-foot .x-credit { font: 12px/1.8 var(--pixel); color: var(--text); }
+      .x-foot nav { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 14px; }
+      .x-foot nav a { font: 12px/1 var(--pixel); color: var(--dim); min-height: 44px; min-width: 44px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+      .x-level__body p a, .x-credit a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+      .x-foot nav a:hover { color: var(--neon); }
+
+      @media (min-width: 640px) {
+        h1 { font-size: 26px; }
+        h2 { font-size: 16px; }
+        .x-digit span:first-child { font-size: 34px; }
+        .x-grid { grid-template-columns: repeat(2, 1fr); }
+        .x-links { grid-template-columns: repeat(2, 1fr); }
+        .x-level__body { padding: 24px 26px 26px; }
+        .x-tag { right: 18px; }
+      }
+      @media (min-width: 860px) {
+        .x-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .x-start, .x-live::before { animation: none; }
+        .x-btn, .x-links a { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="x-bar">
+      <div class="x-wrap">
+        <a class="x-logo" href="#top">nulls<span>_</span>hub</a>
+        <nav class="x-menu" aria-label="Levels">
+          <a href="#about">LV1</a>
+          <a href="#jump">LV2</a>
+          <a href="#cards">LV3</a>
+          <a href="#list">LV4</a>
+          <a href="#timeline">LV5</a>
+          <a href="#checklist">LV6</a>
+          <a href="#links">LV7</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="x-wrap" id="top">
+      <section class="x-hero">
+        <div class="x-screen">
+          <img src="banner.jpg" alt="Official nulls banner art" />
+          <span class="x-tag">v0.1 — built by a fan</span>
+        </div>
+        <p class="x-eyebrow">Fan-made community guide · @nullsxyz</p>
+        <h1>nulls Hub <em>press start to remember</em></h1>
+        <p class="x-sub">Everything a nulls fan needs in one link: play NULLS JUMP before it ends, earn memory cards, and apply for the NULLS LIST.</p>
+        <p class="x-meta">NULLS JUMP ends Mon 30 Nov 2026, 19:00 UTC</p>
+        <p class="x-start" aria-hidden="true">PRESS START</p>
+
+        <div class="x-timer">
+          <p class="x-timer__label"><b>●</b> NEXT STEP: PLAY NULLS JUMP · TOP 25 WIN PRIZES</p>
+          <div class="x-digits" data-countdown-stats aria-label="Time left in NULLS JUMP">
+            <div class="x-digit"><span data-unit="d">--</span><span>DAYS</span></div>
+            <div class="x-digit"><span data-unit="h">--</span><span>HRS</span></div>
+            <div class="x-digit"><span data-unit="m">--</span><span>MIN</span></div>
+            <div class="x-digit"><span data-unit="s">--</span><span>SEC</span></div>
+          </div>
+          <p class="x-over" data-countdown-ended hidden>GAME OVER · Competition ended</p>
+          <p class="x-timer__line" data-countdown aria-live="off">Ends in <strong>—</strong></p>
+        </div>
+
+        <div class="x-btns">
+          <a class="x-btn" href="https://nulls.world/jump" target="_blank" rel="noopener">▶ Play NULLS JUMP</a>
+          <a class="x-btn x-btn--ghost" href="https://nulls.world/apply" target="_blank" rel="noopener">Apply for NULLS LIST</a>
+        </div>
+        <p class="x-fine" style="text-align:center">Art: official nulls banner</p>
+      </section>
+
+      <section class="x-level" id="about">
+        <div class="x-level__bar"><span><b>LEVEL 1</b> · ABOUT</span><span>★☆☆</span></div>
+        <div class="x-level__body">
+          <p class="x-lead">Press start to remember</p>
+          <h2>A retro-game-inspired NFT project coming to NEAR.</h2>
+          <p>nulls is coming to NEAR Protocol with support from Aurora and Zilkroad, announced 10 Nov 2026.</p>
+          <p>Official site: <a href="https://nulls.world" target="_blank" rel="noopener">nulls.world</a> · Official X: <a href="https://x.com/nullsxyz" target="_blank" rel="noopener">@nullsxyz</a></p>
+        </div>
+      </section>
+
+      <section class="x-level" id="jump">
+        <div class="x-level__bar"><span><b>LEVEL 2</b> · NULLS JUMP</span><span class="x-live">LIVE NOW</span></div>
+        <div class="x-level__body">
+          <h2>NULLS JUMP: jump high, win a 1/1.</h2>
+          <p class="x-lead">A high-score jumping game. Ends Mon 30 Nov 2026 at 19:00 UTC (23:00 in Dubai).</p>
+          <figure class="x-pic">
+            <img src="jump.jpg" alt="NULLS JUMP game art" />
+            <figcaption>NULLS JUMP</figcaption>
+          </figure>
+          <h3>HIGH SCORE PRIZES</h3>
+          <ol class="x-prizes">
+            <li><span class="x-rank">1ST <small>One winner</small></span><span class="x-prize">1/1 NULL "Skywalker"</span></li>
+            <li><span class="x-rank">TOP 10</span><span class="x-prize">NULLS LIST spot</span></li>
+            <li><span class="x-rank">TOP 25</span><span class="x-prize">Memory card</span></li>
+          </ol>
+          <p class="x-fine">Runs are replayed to verify scores. Cheating means removal and a permanent ban.</p>
+          <div class="x-btns x-btns--left">
+            <a class="x-btn" href="https://nulls.world/jump" target="_blank" rel="noopener">▶ Play</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="x-level" id="cards">
+        <div class="x-level__bar"><span><b>LEVEL 3</b> · MEMORY CARDS</span><span>★★☆</span></div>
+        <div class="x-level__body">
+          <h2>Memory cards: five ways to earn them.</h2>
+          <p class="x-lead">You collect memory cards on the road to the NULLS LIST.</p>
+          <figure class="x-pic">
+            <img src="cards.jpg" alt="Memory cards art" />
+            <figcaption>Memory cards</figcaption>
+          </figure>
+          <div class="x-grid">
+            <div><h3>Games</h3><p>Play official games like NULLS JUMP.</p></div>
+            <div><h3>Puzzles</h3><p>Solve the puzzles nulls drops.</p></div>
+            <div><h3>Challenges</h3><p>Complete community challenges.</p></div>
+            <div><h3>Social support</h3><p>Post and engage about nulls on X.</p></div>
+            <div><h3>Community activations</h3><p>Join events and activations.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="x-level" id="list">
+        <div class="x-level__bar"><span><b>LEVEL 4</b> · NULLS LIST</span><span>★★★</span></div>
+        <div class="x-level__body">
+          <h2>The NULLS LIST is a limited application list.</h2>
+          <figure class="x-pic">
+            <img src="press.jpg" alt="Press start art" />
+            <figcaption>Press start</figcaption>
+          </figure>
+          <div class="x-tip">
+            <h3>TIP</h3>
+            <p><strong>Be active, original and helpful.</strong> Quality posts beat spam.</p>
+            <a class="x-btn" href="https://nulls.world/apply" target="_blank" rel="noopener">Apply at nulls.world/apply</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="x-level" id="timeline">
+        <div class="x-level__bar"><span><b>LEVEL 5</b> · SAVE LOG</span><span>NOV 2026</span></div>
+        <div class="x-level__body">
+          <h2>How November has played out.</h2>
+          <ol class="x-log">
+            <li>
+              <p class="x-when">10 Nov 2026</p>
+              <p class="x-what">NEAR announcement with Aurora and Zilkroad support; NULLS LIST applications open.</p>
+            </li>
+            <li>
+              <p class="x-when">11 Nov 2026</p>
+              <p class="x-what">Memory card system explained.</p>
+            </li>
+            <li>
+              <p class="x-when">12–14 Nov 2026</p>
+              <p class="x-what">Side quests with partners Meteor Wallet, Noir Wallet and Rhea Finance.</p>
+            </li>
+            <li class="is-current">
+              <p class="x-when">~18 Nov 2026</p>
+              <p class="x-what">NULLS JUMP goes live.</p>
+              <span class="x-chip x-chip--on">LIVE</span>
+            </li>
+            <li>
+              <p class="x-when">30 Nov 2026, 19:00 UTC</p>
+              <p class="x-what">NULLS JUMP ends.</p>
+              <span class="x-chip">DEADLINE</span>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="x-level" id="checklist">
+        <div class="x-level__bar"><span><b>LEVEL 6</b> · QUESTS</span><span>CHECKLIST</span></div>
+        <div class="x-level__body">
+          <h2>Contributor checklist.</h2>
+          <p class="x-lead">Tap an item to tick it off. Nothing is saved.</p>
+          <ul class="x-checks" data-tick>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Follow @nullsxyz</span></li>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Turn on post notifications</span></li>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Play NULLS JUMP and post your score</span><span class="x-due">Before 30 Nov</span></li>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Share fan art or a post tagging @nullsxyz</span></li>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Apply for the NULLS LIST</span></li>
+            <li><span class="x-box" aria-hidden="true"></span><span class="x-item">Help newcomers in replies</span></li>
+          </ul>
+          <p class="x-score" aria-live="polite">QUESTS: <b data-done>0</b>/6</p>
+        </div>
+      </section>
+
+      <section class="x-level" id="links">
+        <div class="x-level__bar"><span><b>LEVEL 7</b> · WARP ZONE</span><span>OFFICIAL</span></div>
+        <div class="x-level__body">
+          <h2>Official links only.</h2>
+          <div class="x-links">
+            <a href="https://nulls.world" target="_blank" rel="noopener"><h3>Website</h3><span>nulls.world</span></a>
+            <a href="https://nulls.world/jump" target="_blank" rel="noopener"><h3>Play NULLS JUMP</h3><span>nulls.world/jump</span></a>
+            <a href="https://nulls.world/apply" target="_blank" rel="noopener"><h3>Apply</h3><span>nulls.world/apply</span></a>
+            <a href="https://x.com/nullsxyz" target="_blank" rel="noopener"><h3>X</h3><span>x.com/nullsxyz</span></a>
+          </div>
+        </div>
+      </section>
+
+      <p class="x-note">made this between runs of nulls jump — see you on the leaderboard :)</p>
+
+      <footer class="x-foot">
+        <p>Fan-made community page. Not affiliated with or endorsed by nulls. Always verify links and announcements on the official @nullsxyz account. Never share your seed phrase.</p>
+        <p class="x-credit">Made by a nulls fan · <a href="https://x.com/AzrarM" target="_blank" rel="noopener">@AzrarM</a></p>
+        <nav aria-label="Back to sections">
+          <a href="#about">About</a>
+          <a href="#jump">Jump</a>
+          <a href="#cards">Cards</a>
+          <a href="#list">List</a>
+          <a href="#timeline">Timeline</a>
+          <a href="#checklist">Checklist</a>
+          <a href="#links">Links</a>
+          <a href="#top">▲ Top</a>
+        </nav>
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        var end = Date.parse("2026-11-30T19:00:00Z");
+        var hero = document.querySelector("[data-countdown]");
+        var stats = document.querySelector("[data-countdown-stats]");
+        var ended = document.querySelector("[data-countdown-ended]");
+        function pad(n) { return String(n).padStart(2, "0"); }
+        function tick() {
+          var ms = end - Date.now();
+          if (ms <= 0) {
+            hero.innerHTML = "<strong>Competition ended</strong>";
+            stats.hidden = true;
+            ended.hidden = false;
+            clearInterval(timer);
+            return;
+          }
+          var s = Math.floor(ms / 1000);
+          var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+          hero.innerHTML = "Ends in <strong>" + d + "d " + pad(h) + "h " + pad(m) + "m " + pad(sec) + "s</strong>";
+          stats.querySelector('[data-unit="d"]').textContent = pad(d);
+          stats.querySelector('[data-unit="h"]').textContent = pad(h);
+          stats.querySelector('[data-unit="m"]').textContent = pad(m);
+          stats.querySelector('[data-unit="s"]').textContent = pad(sec);
+        }
+        var timer = setInterval(tick, 1000);
+        tick();
+
+        var count = document.querySelector("[data-done]");
+        var items = document.querySelectorAll("[data-tick] li");
+        items.forEach(function (li) {
+          li.setAttribute("role", "checkbox");
+          li.setAttribute("aria-checked", "false");
+          li.tabIndex = 0;
+          function toggle() {
+            var on = li.classList.toggle("is-done");
+            li.setAttribute("aria-checked", on ? "true" : "false");
+            count.textContent = document.querySelectorAll("[data-tick] li.is-done").length;
+          }
+          li.addEventListener("click", toggle);
+          li.addEventListener("keydown", function (e) {
+            if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
